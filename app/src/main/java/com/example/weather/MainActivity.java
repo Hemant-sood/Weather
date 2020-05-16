@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,32 +17,38 @@ import com.androdocs.httprequest.HttpRequest;
 
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+
+
+
 
 public class MainActivity extends AppCompatActivity {
     private EditText city ;
+    private TextView temp, humidity, wind, pressure;
     private Button find;
-    private TextView temp;
     private String API = "f553e411d4cc589807ac64e4714da846", cityName;
+    private LinearLayout linearLayout ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        linearLayout = findViewById(R.id.display);
+        linearLayout.setVisibility(View.INVISIBLE);
         city = findViewById(R.id.editText);
         find = findViewById(R.id.button);
-        temp = findViewById(R.id.textView);
-        String res = HttpRequest.excuteGet("http://api.openweathermap.org/data/2.5/weather?q=delhi,in&APPID="+API);
-        temp.setText(res);
+        temp = findViewById(R.id.temp);
+        humidity = findViewById(R.id.humidity);
+        wind = findViewById(R.id.wind);
+        pressure = findViewById(R.id.pressure);
+
+
         find.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                  cityName = city.getText().toString();
-
-
                 if( ! cityName.equals("")){
                     findTemp();
                 }
-
             }
         });
     }
@@ -51,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            Toast.makeText(MainActivity.this, "Started...",Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Wait a second...",Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -65,8 +72,16 @@ public class MainActivity extends AppCompatActivity {
             try{
                 JSONObject json  = new JSONObject(res);
                 JSONObject main = json.getJSONObject("main");
-                double temperatur = Double.parseDouble( main.get("temp").toString() ) - 273.15;
-                temp.setText(String.valueOf(temperatur));
+                JSONObject windSpeed = json.getJSONObject("wind");
+
+                float t = Float.parseFloat( main.get("temp").toString() ) - 273.15f;
+
+                temp.setText( new DecimalFormat("##.##").format(t) +"°C");
+                humidity.setText(main.get("humidity").toString() +"% humidity");
+                pressure.setText(main.get("pressure").toString()+" hpa");
+                wind.setText(windSpeed.get("speed").toString()+" m/s");
+                linearLayout.setVisibility(View.VISIBLE);
+
             }catch (Exception e){
                 Log.d("Exception",e.getMessage());
             }
